@@ -1,6 +1,6 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/card";
+import { Badge } from "@/components/badge";
+import { Button } from "@/components/button";
 import { CheckCircle2, Lock, Circle, Trophy, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 

@@ -1,30 +1,103 @@
-import { Card } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/card";
+import { Progress } from "@/components/progress";
+import { Badge } from "@/components/badge";
+import { Button } from "@/components/button";
 import { Award, BookOpen, Code, Flame, Github, TrendingUp, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 const Dashboard = () => {
-  const userStats = {
-    xp: 2450,
-    level: 3,
-    streak: 12,
-    nextLevelXp: 3000,
-    badges: 8,
-    completedLabs: 24,
+  const navigate = useNavigate();
+
+  const [stats, setStats] = useState(() => {
+    try {
+      const raw = localStorage.getItem("ai:stats");
+      return raw ? JSON.parse(raw) : { xp: 2450, level: 3, streak: 12, nextLevelXp: 3000, badges: 8, completedLabs: 24 };
+    } catch (e) {
+      return { xp: 2450, level: 3, streak: 12, nextLevelXp: 3000, badges: 8, completedLabs: 24 };
+    }
+  });
+
+  const [recentActivity, setRecentActivity] = useState(() => {
+    try {
+      const raw = localStorage.getItem("ai:recent");
+      return raw
+        ? JSON.parse(raw)
+        : [
+            { title: "Completed: Pandas DataFrames", xp: 150, time: "2 hours ago" },
+            { title: "Completed: NumPy Arrays", xp: 120, time: "1 day ago" },
+            { title: "Challenge: Data Cleaning", xp: 200, time: "2 days ago" },
+          ];
+    } catch (e) {
+      return [
+        { title: "Completed: Pandas DataFrames", xp: 150, time: "2 hours ago" },
+        { title: "Completed: NumPy Arrays", xp: 120, time: "1 day ago" },
+        { title: "Challenge: Data Cleaning", xp: 200, time: "2 days ago" },
+      ];
+    }
+  });
+
+  const [currentLabs, setCurrentLabs] = useState(() => {
+    try {
+      const raw = localStorage.getItem("ai:currentLabs");
+      return raw ? JSON.parse(raw) : [{ title: "Matplotlib Visualization", progress: 65, level: 2 }, { title: "Scikit-learn Basics", progress: 30, level: 3 }];
+    } catch (e) {
+      return [{ title: "Matplotlib Visualization", progress: 65, level: 2 }, { title: "Scikit-learn Basics", progress: 30, level: 3 }];
+    }
+  });
+
+  const [githubConnected, setGithubConnected] = useState(() => {
+    try {
+      return localStorage.getItem("ai:github_connected") === "true";
+    } catch (e) {
+      return false;
+    }
+  });
+
+  const [lastLab, setLastLab] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("ai:last_lab");
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem("ai:stats", JSON.stringify(stats));
+  }, [stats]);
+
+  useEffect(() => {
+    localStorage.setItem("ai:currentLabs", JSON.stringify(currentLabs));
+  }, [currentLabs]);
+
+  useEffect(() => {
+    localStorage.setItem("ai:recent", JSON.stringify(recentActivity));
+  }, [recentActivity]);
+
+  useEffect(() => {
+    localStorage.setItem("ai:github_connected", githubConnected ? "true" : "false");
+  }, [githubConnected]);
+
+  useEffect(() => {
+    if (lastLab) localStorage.setItem("ai:last_lab", lastLab);
+  }, [lastLab]);
+
+  const resumeLastLab = () => {
+    if (lastLab) {
+      navigate("/lab");
+    }
   };
 
-  const recentActivity = [
-    { title: "Completed: Pandas DataFrames", xp: 150, time: "2 hours ago" },
-    { title: "Completed: NumPy Arrays", xp: 120, time: "1 day ago" },
-    { title: "Challenge: Data Cleaning", xp: 200, time: "2 days ago" },
-  ];
+  const startLab = (labTitle: string) => {
+    setLastLab(labTitle);
+    // Navigate to lab environment stub
+    navigate("/lab");
+  };
 
-  const currentLabs = [
-    { title: "Matplotlib Visualization", progress: 65, level: 2 },
-    { title: "Scikit-learn Basics", progress: 30, level: 3 },
-  ];
+  const toggleGithub = () => {
+    // Mock GitHub connect flow; in reality you would do OAuth
+    setGithubConnected((v) => !v);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-hero">
@@ -34,9 +107,9 @@ const Dashboard = () => {
             AI Lab
           </Link>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={toggleGithub}>
               <Github className="w-4 h-4 mr-2" />
-              Connect GitHub
+              {githubConnected ? "Disconnect GitHub" : "Connect GitHub"}
             </Button>
             <Button variant="default" size="sm">
               <BookOpen className="w-4 h-4 mr-2" />
@@ -53,7 +126,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-primary-foreground/80 mb-1">Level</p>
-                <p className="text-4xl font-bold text-primary-foreground">{userStats.level}</p>
+                <p className="text-4xl font-bold text-primary-foreground">{stats.level}</p>
               </div>
               <Award className="w-12 h-12 text-primary-foreground/50" />
             </div>
@@ -63,7 +136,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total XP</p>
-                <p className="text-4xl font-bold text-foreground">{userStats.xp}</p>
+                <p className="text-4xl font-bold text-foreground">{stats.xp}</p>
               </div>
               <Zap className="w-12 h-12 text-primary animate-pulse-glow" />
             </div>
@@ -73,7 +146,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Day Streak</p>
-                <p className="text-4xl font-bold text-warning">{userStats.streak}</p>
+                <p className="text-4xl font-bold text-warning">{stats.streak}</p>
               </div>
               <Flame className="w-12 h-12 text-warning" />
             </div>
@@ -83,7 +156,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Badges</p>
-                <p className="text-4xl font-bold text-accent">{userStats.badges}</p>
+                <p className="text-4xl font-bold text-accent">{stats.badges}</p>
               </div>
               <Award className="w-12 h-12 text-accent" />
             </div>
@@ -91,16 +164,16 @@ const Dashboard = () => {
         </div>
 
         {/* Level Progress */}
-        <Card className="p-6 mb-8 bg-card border-border shadow-card">
+          <Card className="p-6 mb-8 bg-card border-border shadow-card">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-foreground">Level {userStats.level} Progress</h3>
             <span className="text-sm text-muted-foreground">
-              {userStats.xp} / {userStats.nextLevelXp} XP
+              {stats.xp} / {stats.nextLevelXp} XP
             </span>
           </div>
           <Progress value={(userStats.xp / userStats.nextLevelXp) * 100} className="h-3" />
           <p className="text-sm text-muted-foreground mt-2">
-            {userStats.nextLevelXp - userStats.xp} XP until Level {userStats.level + 1}
+            {stats.nextLevelXp - stats.xp} XP until Level {stats.level + 1}
           </p>
         </Card>
 
